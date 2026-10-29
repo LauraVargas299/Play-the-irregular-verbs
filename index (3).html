@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mansion Escape · Irregular Past Verbs</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👻</text></svg>">
+<style>
+:root{--bg:#0f0a24;--card:rgba(36,26,69,.82);--ink:#f5f0ff;--mut:#b9acea;--acc:#a78bfa;--pink:#ff7ab8;--ok:#34d399;--bad:#fb7185;--gold:#fbbf24;--line:#4b3b8f}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;color:var(--ink);font:18px/1.45 "Nunito","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 20% 10%,#2b1a63 0,transparent 45%),radial-gradient(circle at 85% 90%,#5a1d5e 0,transparent 40%),var(--bg);padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overflow-x:hidden}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:60}
+#bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+#bg span{position:absolute;bottom:-60px;opacity:.14;animation:fl linear infinite}
+@keyframes fl{to{transform:translateY(-120vh) rotate(25deg)}}
+#app{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:16px}
+.card{background:var(--card);backdrop-filter:blur(8px);border:2px solid var(--line);border-radius:24px;padding:20px;margin-bottom:16px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+h1{font-size:clamp(1.8rem,6vw,2.8rem);margin:.1em 0;text-align:center;background:linear-gradient(90deg,var(--acc),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{margin:.1em 0 .4em;font-size:1.3rem}
+.big{font-size:4.5rem;text-align:center;margin:0;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.c{text-align:center}.mut{color:var(--mut)}.sm{font-size:.85rem}
+button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:16px;padding:12px 22px;color:#fff;background:linear-gradient(135deg,var(--acc),var(--pink));box-shadow:0 4px 0 rgba(0,0,0,.35);transition:transform .12s}
+button:hover{transform:translateY(-2px) scale(1.03)}button:active{transform:translateY(2px)}
+button.alt{background:transparent;color:var(--acc);border:2px solid var(--acc);box-shadow:none}
+button:disabled{opacity:.55;cursor:default;transform:none}
+input{font:inherit;width:100%;padding:14px;border-radius:16px;border:2px solid var(--line);background:#1a1238;color:var(--ink);margin:10px 0;text-align:center}
+.hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;font-weight:800}
+.pill{background:#1a1238;border:2px solid var(--line);border-radius:99px;padding:5px 14px}
+.bar{height:12px;border-radius:9px;background:#1a1238;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--pink));transition:width .5s}
+.map{display:flex;gap:6px;margin:6px 0 12px}
+.map div{flex:1;text-align:center;padding:6px 2px;border-radius:12px;background:#1a1238;border:2px solid var(--line);font-size:.8rem;font-weight:800}
+.map .cur{border-color:var(--gold);box-shadow:0 0 14px var(--gold)}.map .done{border-color:var(--ok);color:var(--ok)}.map .lock{opacity:.45}
+.room{font-size:4rem;text-align:center;animation:flick 2.2s infinite}
+@keyframes flick{0%,100%{filter:drop-shadow(0 0 14px #fbbf24)}50%{filter:drop-shadow(0 0 4px #fbbf24)}}
+.objs{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin:14px 0}
+.obj{font-size:2.8rem;padding:16px 0;background:#1a1238;border:3px dashed var(--acc);box-shadow:none;animation:bob 3s ease-in-out infinite}
+.obj:nth-child(2n){animation-delay:.5s}.obj:nth-child(3n){animation-delay:1s}
+.obj.done{border:3px solid var(--ok);background:rgba(52,211,153,.15);animation:none}
+.obj.done::after{content:" 🔓";font-size:1.2rem}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(8,4,24,.8);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.ov .card{width:100%;max-width:560px;margin:0;animation:pop .3s}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.sent{font-size:1.6rem;font-weight:800;text-align:center;margin:8px 0}
+.sent u{color:var(--ok);text-decoration:none;border-bottom:4px solid var(--ok)}
+.opts{display:grid;gap:10px;margin:14px 0}
+.opt{background:#1a1238;border:3px solid var(--acc);font-size:1.4rem;box-shadow:none}
+.opt.bad{border-color:var(--bad);color:var(--bad);animation:sh .4s}.opt.good{border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.2)}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.msg{padding:10px 14px;border-radius:14px;margin:8px 0;font-weight:700}
+.msg.h{background:rgba(251,191,36,.16)}.msg.g{background:rgba(52,211,153,.16)}.msg.b{background:rgba(251,113,133,.16)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+ol.lb{padding:0;margin:0;list-style:none}
+ol.lb li{display:flex;justify-content:space-between;padding:8px 14px;border-radius:12px;margin-bottom:6px;background:#1a1238}
+ol.lb li.me{outline:3px solid var(--acc)}
+.book{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.book button{background:#1a1238;box-shadow:none;border:2px solid var(--line);font-size:1rem;padding:8px}
+</style>
+</head>
+<body>
+<canvas id="cf"></canvas><div id="bg"></div><div id="app"></div>
+<script>
+// ===== SETTINGS =====
+// Optional: paste your Firebase Realtime Database URL to get a shared online leaderboard
+// Example: "https://my-project-default-rtdb.firebaseio.com"  (leave "" to use a local leaderboard)
+const DB_URL="";
+
+const ROOMS=[
+{n:"Kitchen",e:"🍳",s:"The door slammed shut behind you! Open all 5 locks."},
+{n:"Library",e:"📚",s:"The books are whispering. Solve 5 locks to move on."},
+{n:"Basement",e:"🕯️",s:"It is cold and dark. Words ending in -ought and -aught will guide you."},
+{n:"Tower",e:"🌙",s:"Last room! Open the final 5 locks and escape."}];
+// [base, past, emoji, sentence, wrong1, wrong2, Spanish, hint]
+const Q=[
+["go","went","🚪","Yesterday I ___ to the old kitchen.","goed","gone","Ayer fui a la vieja cocina.","It changes completely. No -ed!"],
+["eat","ate","🍞","She ___ the bread last night.","eated","eaten","Ella se comió el pan anoche.","It sounds like the number eight."],
+["drink","drank","🥛","We ___ all the milk.","drinked","drunk","Nos tomamos toda la leche.","The i changes to a."],
+["have","had","🍽️","They ___ dinner in the dark.","haved","has","Cenaron en la oscuridad.","The v disappears: ha-d."],
+["make","made","🍰","He ___ a cake yesterday.","maked","maken","Él hizo un pastel ayer.","The k disappears: ma-de."],
+["read","read","📖","I ___ a scary book last week.","readed","reads","Leí un libro de miedo la semana pasada.","Same spelling, but it sounds like “red”."],
+["write","wrote","✍️","She ___ a letter to her friend.","writed","written","Ella escribió una carta a su amiga.","The i changes to o."],
+["see","saw","👻","We ___ a ghost!","seed","seen","¡Vimos un fantasma!","It changes completely: s-a-w."],
+["take","took","🔑","He ___ the golden key.","taked","taken","Él tomó la llave dorada.","It has a double o, like book."],
+["give","gave","🎁","They ___ me a map.","gived","given","Me dieron un mapa.","The i changes to a."],
+["buy","bought","🛒","I ___ a candle yesterday.","buyed","buy","Ayer compré una vela.","It ends in -ought."],
+["bring","brought","🔦","She ___ a flashlight.","bringed","brang","Ella trajo una linterna.","It ends in -ought, like buy."],
+["think","thought","💭","He ___ the door was locked.","thinked","thinks","Él pensó que la puerta estaba cerrada.","It ends in -ought."],
+["catch","caught","🦇","We ___ a bat!","catched","catch","¡Atrapamos un murciélago!","It ends in -aught."],
+["teach","taught","👩‍🏫","The ghost ___ us a lesson.","teached","teaches","El fantasma nos dio una lección.","It ends in -aught, like catch."],
+["sing","sang","🎤","She ___ a sad song.","singed","sung","Ella cantó una canción triste.","The i changes to a."],
+["swim","swam","🏊","They ___ in the lake.","swimmed","swum","Ellos nadaron en el lago.","The i changes to a."],
+["run","ran","🏃","I ___ to the tower.","runned","runs","Corrí hacia la torre.","The u changes to a."],
+["come","came","🌬️","The wind ___ in at midnight.","comed","comes","El viento entró a medianoche.","The o changes to a."],
+["be","was","😱","It ___ a long night.","beed","were","Fue una noche larga.","With it, he or she, we use was."]];
+
+// ===== HELPERS =====
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const ls={get:(k,d)=>{try{return localStorage.getItem(k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const pid=ls.get("pid",null)||("p"+Math.random().toString(36).slice(2,10));ls.set("pid",pid);
+let S={screen:"home",nick:ls.get("nick",""),room:0,done:{},score:0,streak:0,first:0,q:null,opts:[],tries:0,hint:false,wrong:[],fb:"",es:false,mute:false,best:+ls.get("best",0)};
+let AC=null,rows=[];
+function sfx(f,d=.15,t="sine",v=.12){if(S.mute)return;try{AC=AC||new AudioContext();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const win=()=>[523,659,784].forEach((f,i)=>setTimeout(()=>sfx(f,.2,"triangle"),i*90));
+function say(t){if(S.mute)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.8;speechSynthesis.speak(u)}catch(e){}}
+function confetti(){const c=$("#cf"),x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;const P=Array.from({length:140},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*15,vy:Math.random()*-15-3,c:`hsl(${Math.random()*360},90%,60%)`,s:Math.random()*8+4}));let n=0;(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;x.fillStyle=p.c;x.fillRect(p.x,p.y,p.s,p.s)});if(++n<120)requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})()}
+const medal=s=>s>=190?"🥇":s>=130?"🥈":"🥉";
+const total=()=>Object.keys(S.done).length;
+const roomDone=r=>[0,1,2,3,4].every(i=>S.done[r*5+i]);
+
+// ===== LEADERBOARD =====
+async function lbGet(){
+  if(DB_URL){try{const r=await (await fetch(DB_URL+"/scores.json")).json();return Object.entries(r||{}).map(([id,v])=>({id,...v}))}catch(e){return rows}}
+  try{return Object.entries(JSON.parse(ls.get("lb","{}"))).map(([id,v])=>({id,...v}))}catch(e){return[]}
+}
+async function lbPut(){
+  const v={nick:S.nick,best:S.best,medal:medal(S.best),t:Date.now()};
+  if(DB_URL){try{await fetch(`${DB_URL}/scores/${pid}.json`,{method:"PUT",body:JSON.stringify(v)})}catch(e){}return}
+  try{const r=JSON.parse(ls.get("lb","{}"));r[pid]=v;ls.set("lb",JSON.stringify(r))}catch(e){}
+}
+const lbHtml=()=>rows.length?'<ol class="lb">'+rows.map((r,i)=>`<li class="${r.id===pid?"me":""}"><span>${["🥇","🥈","🥉"][i]||i+1+"."} ${esc(r.nick||"Player")}</span><b>${r.best|0} pts</b></li>`).join("")+"</ol>":'<p class="mut c">No scores yet. Be the first!</p>';
+async function refresh(){rows=(await lbGet()).sort((a,b)=>b.best-a.best).slice(0,10);const e=$("#lbx");if(e)e.innerHTML=lbHtml()}
+const lbCard=()=>`<div class="card"><h2>🏆 Leaderboard</h2><div id="lbx">${lbHtml()}</div><p class="mut sm c">${DB_URL?"Live online ranking":"Local ranking (this device only)"}</p></div>`;
+
+// ===== RENDER =====
+function render(){
+  const a=$("#app"),tool=`<div class="row"><button class="alt" id="mute">${S.mute?"🔇 Sound off":"🔊 Sound on"}</button><button class="alt" id="es">🇪🇸 Spanish help: ${S.es?"ON":"OFF"}</button></div>`;
+  if(S.screen==="home"){
+    a.innerHTML=`<div class="card"><p class="big">🏚️</p><h1>Mansion Escape</h1><p class="c mut">You are trapped in a haunted mansion! Unlock every door with the correct <b>past form</b> of each irregular verb. 4 rooms · 20 verbs.</p>
+    <input id="nick" maxlength="16" placeholder="Type your name or nickname" value="${esc(S.nick)}"><div class="c"><button id="go">Start 🔦</button></div>${tool}</div>${lbCard()}`;
+    $("#go").onclick=()=>{const n=$("#nick").value.trim();if(!n){$("#nick").focus();return}S.nick=n;ls.set("nick",n);Object.assign(S,{screen:"room",room:0,done:{},score:0,streak:0,first:0,q:null});sfx(440);render()};
+    $("#nick").onkeydown=e=>{if(e.key==="Enter")$("#go").click()};
+  }else if(S.screen==="end"){
+    a.innerHTML=`<div class="card c"><p class="big">${medal(S.score)}</p><h1>You escaped, ${esc(S.nick)}!</h1>
+    <p style="font-size:1.7rem;font-weight:800">${S.score} points</p><p class="mut">${S.first} of 20 verbs correct on the first try</p>
+    <p>${S.score>=190?"Gold medal! You are a verb master.":S.score>=130?"Silver medal! Play again for the gold.":"Bronze medal! Play again to improve."}</p>
+    <h2>📖 Your verb book</h2><div class="book">${Q.map((q,i)=>`<button data-s="${i}">${q[0]} → <b>${q[1]}</b> 🔊</button>`).join("")}</div>
+    <div class="row"><button id="again">Play again</button></div></div>${lbCard()}`;
+    $("#again").onclick=()=>{S.screen="home";render()};
+    document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>say(Q[b.dataset.s][0]+", "+Q[b.dataset.s][1]));
+  }else{
+    const R=ROOMS[S.room],n=[0,1,2,3,4].filter(i=>S.done[S.room*5+i]).length;
+    let h=`<div class="card"><div class="hud"><span class="pill">👤 ${esc(S.nick)}</span><span class="pill">⭐ ${S.score}</span><span class="pill">🔥 x${S.streak}</span><span class="pill">🔓 ${total()}/20</span></div>
+    <div class="bar"><i style="width:${total()*5}%"></i></div>
+    <div class="map">${ROOMS.map((r,i)=>`<div class="${i<S.room||(i===S.room&&roomDone(i))?"done":i===S.room?"cur":"lock"}">${r.e} ${r.n}</div>`).join("")}</div>
+    <div class="room">${R.e}</div><h2 class="c">${R.n}</h2><p class="mut c">${R.s}</p>
+    <div class="objs">${[0,1,2,3,4].map(i=>{const k=S.room*5+i;return `<button class="obj ${S.done[k]?"done":""}" data-k="${k}">${Q[k][2]}</button>`}).join("")}</div>
+    <p class="c mut">Tap an object to see its lock (${n}/5 open)</p>`;
+    if(roomDone(S.room))h+=`<div class="c"><button id="next">${S.room<3?"🚪 Open the door to the next room":"🌅 Escape the mansion!"}</button></div>`;
+    h+=`${tool}</div>${lbCard()}`;
+    if(S.q!==null){
+      const q=Q[S.q],ok=S.done[S.q];
+      h+=`<div class="ov"><div class="card"><p class="big" style="font-size:3.5rem">${q[2]}</p>
+      <p class="sent">${esc(q[3]).replace("___",ok?`<u>${q[1]}</u>`:"_____")}</p>
+      <p class="c mut">Base verb: <b>${q[0]}</b> <button class="alt" id="spk" style="padding:3px 12px">🔊</button></p>
+      ${S.es?`<p class="c mut sm">🇪🇸 ${q[6]}</p>`:""}
+      <div class="opts">${S.opts.map(o=>`<button class="opt ${ok&&o===q[1]?"good":""} ${S.wrong.includes(o)?"bad":""}" data-o="${o}" ${ok||S.wrong.includes(o)?"disabled":""}>${o}</button>`).join("")}</div>
+      ${S.hint&&!ok?`<div class="msg h">💡 ${q[7]}</div>`:""}${S.fb?`<div class="msg ${ok?"g":"b"}">${S.fb}</div>`:""}${ok?`<div class="msg g">${q[0]} → <b>${q[1]}</b></div>`:""}
+      <div class="row">${ok?'<button id="close">Continue ➜</button>':'<button class="alt" id="hint">💡 Hint (-2 pts)</button><button class="alt" id="close">Back</button>'}</div></div></div>`;
+    }
+    a.innerHTML=h;
+    document.querySelectorAll(".obj").forEach(b=>b.onclick=()=>{const k=+b.dataset.k;S.q=k;S.tries=0;S.hint=false;S.wrong=[];S.fb="";S.opts=shuffle([Q[k][1],Q[k][4],Q[k][5]]);sfx(330,.1);render()});
+    document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(b.dataset.o));
+    const set=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+    set("#spk",()=>say(Q[S.q][0]+", "+Q[S.q][1]));
+    set("#hint",()=>{S.hint=true;render()});
+    set("#close",()=>{S.q=null;render()});
+    set("#next",()=>{confetti();win();if(S.room<3){S.room++}else{S.screen="end"}S.q=null;render()});
+  }
+  set2("#mute",()=>{S.mute=!S.mute;render()});set2("#es",()=>{S.es=!S.es;render()});
+  const lx=$("#lbx");if(lx)lx.innerHTML=lbHtml();
+}
+function set2(id,f){const e=$(id);if(e)e.onclick=f}
+function answer(o){
+  const q=Q[S.q];
+  if(o===q[1]){
+    const first=S.tries===0;let pts=Math.max(1,(first?10:5)-(S.hint?2:0));
+    S.streak=first?S.streak+1:0;if(first)S.first++;
+    if(first&&S.streak>=3)pts+=2;
+    S.done[S.q]=true;S.score+=pts;S.fb=`🎉 Correct! +${pts} points${first&&S.streak>=3?" (streak bonus 🔥)":""}`;
+    win();say(q[3].replace("___",q[1]));
+    if(S.score>S.best){S.best=S.score;ls.set("best",S.best)}
+    lbPut().then(refresh);
+    if(roomDone(S.room))setTimeout(confetti,300);
+  }else{S.tries++;S.streak=0;S.wrong.push(o);S.hint=true;S.fb="❌ Almost! Read the hint and try again.";sfx(150,.3,"sawtooth",.1)}
+  render();
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.q!==null&&!S.done[S.q]){S.q=null;render()}});
+for(let i=0;i<10;i++){const s=document.createElement("span");s.textContent=["👻","🦇","🕸️","🕯️"][i%4];s.style.cssText=`left:${i*10+Math.random()*8}%;font-size:${30+Math.random()*40}px;animation-duration:${14+Math.random()*16}s;animation-delay:-${Math.random()*20}s`;$("#bg").appendChild(s)}
+render();refresh();setInterval(refresh,6000);
+</script>
+</body>
+</html>
