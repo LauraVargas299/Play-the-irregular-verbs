@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Mansion Escape: escape a haunted mansion by unlocking doors with irregular past verbs.">
+<title>Mansion Escape · Irregular Past Verbs</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👻</text></svg>">
+<style>
+:root{--bg:#0f0a24;--card:rgba(36,26,69,.82);--ink:#f5f0ff;--mut:#b9acea;--acc:#a78bfa;--pink:#ff7ab8;--ok:#34d399;--bad:#fb7185;--gold:#fbbf24;--line:#4b3b8f;--g1:#2b1a63;--g2:#5a1d5e}
+body[data-room="0"]{--g1:#6b3410;--g2:#6b1f3a}
+body[data-room="1"]{--g1:#1c5a45;--g2:#3a2a6b}
+body[data-room="2"]{--g1:#10355a;--g2:#1a1a3a}
+body[data-room="3"]{--g1:#3a1a63;--g2:#6b1d5e}
+body[data-room="boss"]{--g1:#7a0f25;--g2:#2b1a63}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:18px/1.45 "Nunito","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 20% 10%,var(--g1) 0,transparent 45%),radial-gradient(circle at 85% 90%,var(--g2) 0,transparent 40%),var(--bg);background-attachment:fixed;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overflow-x:hidden;transition:background .6s}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:60}
+#fl{position:fixed;inset:0;background:#c4b5fd;opacity:0;pointer-events:none;z-index:50}
+#fl.on{animation:fx 1.4s ease-out}
+@keyframes fx{0%{opacity:0}25%{opacity:.09}100%{opacity:0}}
+#bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+#bg span{position:absolute;bottom:-60px;opacity:.14;animation:fl linear infinite}
+@keyframes fl{to{transform:translateY(-120vh) rotate(25deg)}}
+#app{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:16px}
+.card{background:var(--card);backdrop-filter:blur(8px);border:2px solid var(--line);border-radius:24px;padding:20px;margin-bottom:16px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+h1{font-size:clamp(1.8rem,6vw,2.8rem);margin:.1em 0;text-align:center;background:linear-gradient(90deg,var(--acc),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{margin:.1em 0 .4em;font-size:1.3rem}
+.big{font-size:4.5rem;text-align:center;margin:0;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.c{text-align:center}.mut{color:var(--mut)}.sm{font-size:.85rem}
+button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:16px;padding:12px 22px;color:#fff;background:linear-gradient(135deg,var(--acc),var(--pink));box-shadow:0 4px 0 rgba(0,0,0,.35);transition:transform .12s}
+button:hover{transform:translateY(-2px) scale(1.03)}button:active{transform:translateY(2px)}
+button.alt{background:transparent;color:var(--acc);border:2px solid var(--acc);box-shadow:none}
+button:disabled{opacity:.5;cursor:default;transform:none}
+input{font:inherit;width:100%;padding:14px;border-radius:16px;border:2px solid var(--line);background:#1a1238;color:var(--ink);margin:10px 0;text-align:center}
+input:focus{outline:3px solid var(--acc)}
+.hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;font-weight:800}
+.pill{background:#1a1238;border:2px solid var(--line);border-radius:99px;padding:5px 14px}
+.bar{height:12px;border-radius:9px;background:#1a1238;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--pink));transition:width .5s}
+.bar.hp i{background:linear-gradient(90deg,#fb7185,#fbbf24)}
+.bar.tm i{background:linear-gradient(90deg,var(--ok),var(--gold),var(--bad));transition:none;width:100%}
+.map{display:flex;gap:6px;margin:6px 0 12px}
+.map div{flex:1;text-align:center;padding:6px 2px;border-radius:12px;background:#1a1238;border:2px solid var(--line);font-size:.8rem;font-weight:800}
+.map .cur{border-color:var(--gold);box-shadow:0 0 14px var(--gold)}.map .done{border-color:var(--ok);color:var(--ok)}.map .lock{opacity:.45}
+.room{font-size:4rem;text-align:center;animation:flick 2.2s infinite}
+@keyframes flick{0%,100%{filter:drop-shadow(0 0 14px #fbbf24)}50%{filter:drop-shadow(0 0 4px #fbbf24)}}
+.boo{display:flex;gap:10px;align-items:center;background:rgba(167,139,250,.14);border:2px dashed var(--acc);border-radius:18px;padding:8px 14px;margin:8px 0;font-weight:700}
+.boo span{font-size:2rem;animation:bob 2.5s ease-in-out infinite}
+.objs{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin:14px 0}
+.objs.dark{touch-action:none;cursor:none}
+.dk{position:absolute;inset:-14px;border-radius:22px;pointer-events:none;z-index:2;background:radial-gradient(circle 120px at var(--x,50%) var(--y,50%),transparent 0,transparent 35%,rgba(5,2,18,.96) 100%)}
+.obj{font-size:2.8rem;padding:16px 0;background:#1a1238;border:3px dashed var(--acc);box-shadow:none;animation:bob 3s ease-in-out infinite;position:relative}
+.obj:nth-child(2n){animation-delay:.5s}.obj:nth-child(3n){animation-delay:1s}
+.obj.done{border:3px solid var(--ok);background:rgba(52,211,153,.15);animation:none;z-index:3}
+.obj.done::after{content:" 🔓";font-size:1.2rem}
+.obj:not(.done)::after{content:"👆";position:absolute;right:6px;bottom:0;font-size:1.1rem;animation:bob 1.5s ease-in-out infinite}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(8,4,24,.82);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.ov .card{width:100%;max-width:560px;margin:0;animation:pop .3s}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.badge{display:inline-block;background:#1a1238;border:2px solid var(--line);border-radius:99px;padding:2px 12px;font-size:.8rem;font-weight:800;color:var(--gold)}
+.sent{font-size:1.6rem;font-weight:800;text-align:center;margin:8px 0}
+.sent u{color:var(--ok);text-decoration:none;border-bottom:4px solid var(--ok)}
+.opts{display:grid;gap:10px;margin:14px 0}
+.opt,.bopt{background:#1a1238;border:3px solid var(--acc);font-size:1.4rem;box-shadow:none}
+.opt.bad{border-color:var(--bad);color:var(--bad);animation:sh .4s}.opt.good{border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.2)}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.slots{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.slot{flex:1 1 0;max-width:44px;min-width:26px;height:54px;border-bottom:4px solid var(--acc);font-size:1.8rem;font-weight:800;text-align:center;line-height:54px;background:#1a1238;border-radius:10px 10px 0 0}
+.slots.good .slot{border-color:var(--ok);color:var(--ok)}
+.lts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.lt{font-size:1.5rem;padding:10px 16px;min-width:52px}
+.msg{padding:10px 14px;border-radius:14px;margin:8px 0;font-weight:700}
+.msg.h{background:rgba(251,191,36,.16)}.msg.g{background:rgba(52,211,153,.16)}.msg.b{background:rgba(251,113,133,.16)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+ol.lb{padding:0;margin:0;list-style:none}
+ol.lb li{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;border-radius:12px;margin-bottom:6px;background:#1a1238}
+ol.lb li.me{outline:3px solid var(--acc)}
+ol.lb small{color:var(--mut);font-weight:400}
+.book{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.book.wide{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.book button{background:#1a1238;box-shadow:none;border:2px solid var(--line);font-size:1rem;padding:10px;text-align:center}
+.book small{display:block;color:var(--gold);letter-spacing:2px}
+.book button.lockc{opacity:.55;border-style:dashed;cursor:default}
+.book button.lockc:hover{transform:none}
+.book span.es{display:block;font-size:.8rem;color:var(--mut);font-weight:400}
+.boss{font-size:6.5rem;text-align:center;line-height:1.1;animation:bob 2s ease-in-out infinite;filter:drop-shadow(0 0 20px #fb7185)}
+.boss.hit{animation:sh .4s;filter:hue-rotate(160deg) drop-shadow(0 0 20px #fff)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.chip{background:#1a1238;border:2px solid var(--line);border-radius:99px;padding:4px 12px;font-size:.85rem;font-weight:800}
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:80;background:linear-gradient(135deg,var(--gold),var(--pink));color:#1a1238;font-weight:800;padding:10px 20px;border-radius:99px;animation:pop .3s;box-shadow:0 6px 20px rgba(0,0,0,.5);white-space:nowrap}
+.how{background:rgba(251,191,36,.14);border:2px solid var(--gold);border-radius:16px;padding:10px 14px;margin:10px 0;font-weight:700;text-align:center}
+.help{max-height:80vh;overflow:auto;text-align:left}
+.help h2{margin-top:14px;color:var(--gold)}
+.help ul{margin:6px 0;padding-left:22px}.help li{margin:4px 0}
+.status{padding:10px 14px;border-radius:14px;margin:12px 0;font-weight:700;background:rgba(167,139,250,.16)}
+.status.ok{background:rgba(52,211,153,.16)}.status.bad{background:rgba(251,113,133,.16)}
+details.more summary{cursor:pointer;font-weight:800;font-size:1.2rem;margin:8px 0;color:var(--gold)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="cf"></canvas><div id="fl"></div><div id="bg"></div><div id="app"></div>
+<script>
+// ===== SETTINGS =====
+// ONLINE LEADERBOARD (so the teacher can see everyone's score):
+// 1) Create a free project at https://console.firebase.google.com and add a "Realtime Database".
+// 2) In the Rules tab, paste the rules shown in the instructions and publish.
+// 3) Copy the database URL here, for example "https://my-project-default-rtdb.firebaseio.com"
+// Leave "" to use a local leaderboard (only on each device).
+// Teacher view: open the page with ?teacher=1 at the end of the address to see ALL scores and download a CSV.
+const DB_URL="";
+
+const N=7;            // locks per room
+const ROOMQ=21;       // verbs in the 3 rooms (Tower verbs start at this index)
+const NV=35;          // total verbs in the game
+const LIVES=4;
+const TEACHER=/[?&]teacher\b/.test(location.search);
+
+const ROOMS=[
+{n:"Kitchen",e:"🍳",s:"The door slammed shut! Pick the right past form to open 7 locks."},
+{n:"Library",e:"📚",s:"The letters flew off the pages! Unscramble them to open 7 locks."},
+{n:"Basement",e:"🕯️",s:"It is pitch black. Light up the locks with your flashlight, then listen and type!"},
+{n:"Tower",e:"🌙",s:"Lord Irregular awaits at the top. Defeat him to escape!"}];
+const MODES=["Pick the correct past form","Unscramble the letters ✨","Listen 🎧 and type the past form"];
+const MODEHOW=["Tap the correct answer, or press 1, 2 or 3 on your keyboard.","Tap the letters in the right order to build the past form. Use Undo if you slip.","Tap 🎧 to listen, type the past form, then press Enter or tap Unlock."];
+const HOW=["👆 Tap one of the objects below to open its lock. Then tap the correct past form (or press 1, 2, 3). Open all 7 locks to continue.","👆 Tap an object to open its lock. Then tap the letters in order to spell the past form. Open all 7 locks to continue.","🔦 Move your mouse (or drag your finger) over the dark area to light it up. Tap a lit object, listen, and type the past form. Open all 7 locks."];
+const BASEPTS=[10,12,15];
+// [base, past, emoji, sentence, wrong1, wrong2, Spanish, hint]
+// Order: Kitchen 0-6 · Library 7-13 · Basement 14-20 · Tower (boss) 21-34
+const Q=[
+// ---- Kitchen
+["go","went","🚪","Yesterday I ___ to the old kitchen.","goed","gone","Ayer fui a la vieja cocina.","A totally different word, not “go + ed”. It has 4 letters."],
+["eat","ate","🍞","She ___ the bread last night.","eated","eaten","Ella se comió el pan anoche.","Only the vowels change and the word gets shorter. It has 3 letters."],
+["drink","drank","🥛","We ___ all the milk.","drinked","drunk","Nos tomamos toda la leche.","Same pattern as ring → rang. It has 5 letters."],
+["have","had","🍽️","They ___ dinner in the dark.","haved","has","Cenaron en la oscuridad.","The word gets shorter and the ending changes. It has 3 letters."],
+["make","made","🍰","He ___ a cake yesterday.","maked","maken","Él hizo un pastel ayer.","Almost the same word: change the last part, not the start. It has 4 letters."],
+["take","took","🔑","She ___ the golden key.","taked","taken","Ella tomó la llave dorada.","Think of the vowel sound in “foot”. It has 4 letters."],
+["give","gave","🎁","They ___ me a map.","gived","given","Me dieron un mapa.","Change only one vowel and keep the rest. It has 4 letters."],
+// ---- Library
+["read","read","📖","I ___ a scary book last week.","readed","reads","Leí un libro de miedo la semana pasada.","Look carefully at the spelling, then think about the sound. It has 4 letters."],
+["write","wrote","✍️","She ___ a letter to her friend.","writed","written","Ella escribió una carta a su amiga.","Same pattern as ride → rode. It has 5 letters."],
+["see","saw","👻","We ___ a ghost!","seed","seen","¡Vimos un fantasma!","The first letter stays. The vowels change completely. It has 3 letters."],
+["think","thought","💭","He ___ the door was locked.","thinked","thinks","Él pensó que la puerta estaba cerrada.","It has a silent “gh” and starts with “th”. It has 7 letters."],
+["know","knew","🧠","She ___ the secret code.","knowed","known","Ella sabía el código secreto.","It has a silent first letter, just like its base verb. It has 4 letters."],
+["teach","taught","👩‍🏫","The ghost ___ us a lesson.","teached","teaches","El fantasma nos dio una lección.","It rhymes with “caught”. It has 6 letters."],
+["tell","told","🗣️","My friend ___ me a scary story.","telled","tells","Mi amigo me contó una historia de miedo.","The vowel changes and the last letter changes too. It has 4 letters."],
+// ---- Basement
+["buy","bought","🛒","I ___ a candle yesterday.","buyed","buy","Ayer compré una vela.","A long form with a silent “gh”. It has 6 letters."],
+["bring","brought","🔦","She ___ a flashlight.","bringed","brang","Ella trajo una linterna.","Another long form with a silent “gh”. It has 7 letters."],
+["catch","caught","🦇","We ___ a bat!","catched","catch","¡Atrapamos un murciélago!","Silent “gh” again, but with a different vowel pair. It has 6 letters."],
+["find","found","🔍","We ___ a secret door.","finded","find","Encontramos una puerta secreta.","The vowel “i” becomes two different vowels. It has 5 letters."],
+["fight","fought","🥊","He ___ the ghost with a broom.","fighted","fighten","Él peleó con el fantasma con una escoba.","Think of the verbs buy and think: it follows the same pattern. It has 6 letters."],
+["lose","lost","🗝️","I ___ my keys in the dark.","losed","loose","Perdí mis llaves en la oscuridad.","It has only one vowel and ends with “t”. It has 4 letters."],
+["hide","hid","🙈","The cat ___ under the bed.","hided","hidden","El gato se escondió debajo de la cama.","It is shorter than the base verb. It has 3 letters."],
+// ---- Tower (boss fight)
+["sing","sang","🎤","She ___ a sad song.","singed","sung","Ella cantó una canción triste.","Same pattern as begin → began. It has 4 letters."],
+["swim","swam","🏊","They ___ in the lake.","swimmed","swum","Ellos nadaron en el lago.","Only the vowel changes. It rhymes with “ham”. It has 4 letters."],
+["run","ran","🏃","I ___ to the tower.","runned","runs","Corrí hacia la torre.","Only the vowel changes. It rhymes with “can”. It has 3 letters."],
+["come","came","🌬️","The wind ___ in at midnight.","comed","comes","El viento entró a medianoche.","Only the vowel changes and the final “e” stays. It has 4 letters."],
+["be","was","😱","It ___ a long night.","beed","were","Fue una noche larga.","A totally different word, used with I, he, she and it. It has 3 letters."],
+["fly","flew","🐦","The bird ___ over the tower.","flyed","flown","El pájaro voló sobre la torre.","Same idea as blow → blew. It has 4 letters."],
+["fall","fell","🕯️","The candle ___ on the floor.","falled","fallen","La vela cayó al suelo.","Only the vowel changes and the double “l” stays. It has 4 letters."],
+["drive","drove","🚗","He ___ to the old mansion.","drived","driven","Él condujo hasta la vieja mansión.","It rhymes with “cove”. It has 5 letters."],
+["sit","sat","🪑","We ___ on the cold stairs.","sitted","sit","Nos sentamos en las escaleras frías.","Only the vowel changes. It rhymes with “cat”. It has 3 letters."],
+["stand","stood","🧍","She ___ in front of the door.","standed","stand","Ella se paró frente a la puerta.","It has the same vowel sound as “good”. It has 5 letters."],
+["wake","woke","⏰","I ___ up at midnight.","waked","woken","Me desperté a medianoche.","The first vowel changes and the final “e” stays. It has 4 letters."],
+["win","won","🏆","They ___ the game.","winned","win","Ellos ganaron el juego.","Only the vowel changes. It has 3 letters and ends with “n”."],
+["feel","felt","😨","He ___ very scared.","feeled","feel","Él se sintió muy asustado.","It ends with “t”. It has 4 letters."],
+["leave","left","🚶","The ghost ___ the room.","leaved","leaves","El fantasma salió de la habitación.","It is shorter than the base verb and ends with “t”. It has 4 letters."]];
+
+// 45 more verbs to keep learning: [base, past simple, past participle, Spanish]
+const MORE=[
+["begin","began","begun","empezar"],["break","broke","broken","romper"],["build","built","built","construir"],["choose","chose","chosen","elegir"],
+["cost","cost","cost","costar"],["cut","cut","cut","cortar"],["do","did","done","hacer"],["draw","drew","drawn","dibujar"],
+["forget","forgot","forgotten","olvidar"],["get","got","got / gotten (US)","obtener"],["grow","grew","grown","crecer"],["hear","heard","heard","oír"],
+["hit","hit","hit","golpear"],["hold","held","held","sostener"],["hurt","hurt","hurt","lastimar"],["keep","kept","kept","guardar"],
+["lead","led","led","guiar"],["lend","lent","lent","prestar"],["let","let","let","permitir"],["mean","meant","meant","significar"],
+["meet","met","met","conocer"],["pay","paid","paid","pagar"],["put","put","put","poner"],["ride","rode","ridden","montar"],
+["ring","rang","rung","sonar"],["rise","rose","risen","subir"],["say","said","said","decir"],["sell","sold","sold","vender"],
+["send","sent","sent","enviar"],["shoot","shot","shot","disparar"],["shut","shut","shut","cerrar"],["sleep","slept","slept","dormir"],
+["speak","spoke","spoken","hablar"],["spend","spent","spent","gastar"],["steal","stole","stolen","robar"],["sweep","swept","swept","barrer"],
+["throw","threw","thrown","lanzar"],["understand","understood","understood","entender"],["wear","wore","worn","vestir"],["tear","tore","torn","rasgar"],
+["shake","shook","shaken","sacudir"],["bite","bit","bitten","morder"],["blow","blew","blown","soplar"],["feed","fed","fed","alimentar"],
+["freeze","froze","frozen","congelar"]];
+
+const BADGES={first:["🗝️","First key"],combo:["🔥","Combo x5"],perfect:["✨","Perfect room"],speed:["⚡","Lightning answer"],flawless:["🛡️","Beat the boss without losing a heart"],escape:["🏃","Escaped the mansion"]};
+const BOO={start:["Boo! I'm Boo. I haunt this place and I love verbs!","Don't be scared... much. I'll help you!"],ok:["Boo-tiful!","Spooky good!","You're glowing!","Nice one!"],bad:["Oops! Read the hint.","Even ghosts make mistakes!","Almost! Try again."],room:["Door unlocked! Let's go!"]};
+
+// ===== HELPERS =====
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+const norm=s=>String(s).trim().toLowerCase();
+const ls={get:(k,d)=>{try{return localStorage.getItem(k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const jp=(k,d)=>{try{return JSON.parse(ls.get(k,"")||JSON.stringify(d))}catch(e){return d}};
+const pid=ls.get("pid",null)||("p"+Math.random().toString(36).slice(2,10));ls.set("pid",pid);
+let mast=jp("mast",{}),ach=jp("ach",{}),seen=jp("seen",{}),T=null,rows=[];
+const saveSeen=k=>{seen[k]=1;ls.set("seen",JSON.stringify(seen))};
+const seenCount=()=>Q.filter(q=>seen[q[0]]).length;
+let S={help:false,screen:"home",back:"home",nick:ls.get("nick",""),room:0,done:{},score:0,streak:0,maxStreak:0,first:0,q:null,opts:[],tries:0,hint:false,wrong:[],fb:"",letters:[],built:[],es:false,mute:false,best:+ls.get("best3",0),missed:[],mist:[0,0,0],boo:"",B:null,sent:null,stamp:0};
+let AC=null;
+function sfx(f,d=.15,t="sine",v=.12){if(S.mute)return;try{AC=AC||new AudioContext();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const win=()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>sfx(f,.2,"triangle"),i*90));
+const oops=()=>{sfx(247,.14,"sine",.09);setTimeout(()=>sfx(185,.2,"sine",.09),120)};
+function say(t){if(S.mute)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.8;speechSynthesis.speak(u)}catch(e){}}
+function confetti(){const c=$("#cf"),x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;const P=Array.from({length:160},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*16,vy:Math.random()*-16-3,c:`hsl(${Math.random()*360},90%,60%)`,s:Math.random()*8+4}));let n=0;(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;x.fillStyle=p.c;x.fillRect(p.x,p.y,p.s,p.s)});if(++n<130)requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})()}
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
+function unlock(id){if(ach[id])return;ach[id]=1;ls.set("ach",JSON.stringify(ach));toast(BADGES[id][0]+" Badge: "+BADGES[id][1]+"!")}
+const medal=s=>s>=430?"🥇":s>=300?"🥈":"🥉";
+const total=()=>Object.keys(S.done).length;
+const roomDone=r=>Array.from({length:N},(_,i)=>i).every(i=>S.done[r*N+i]);
+const stars=v=>{const m=mast[v]||0;return "★".repeat(m)+"☆".repeat(3-m)};
+
+// ===== LEADERBOARD =====
+async function lbGet(){
+  if(DB_URL){try{const r=await (await fetch(DB_URL+"/scores.json")).json();return Object.entries(r||{}).map(([id,v])=>({id,...v}))}catch(e){return rows}}
+  try{return Object.entries(JSON.parse(ls.get("lb3","{}"))).map(([id,v])=>({id,...v}))}catch(e){return[]}
+}
+// returns "online" | "local" | "fail"
+async function lbPut(){
+  const v={nick:S.nick.slice(0,20),best:S.best,medal:medal(S.best),t:Date.now(),verbs:seenCount()};
+  if(DB_URL){try{const r=await fetch(`${DB_URL}/scores/${pid}.json`,{method:"PUT",body:JSON.stringify(v)});return r.ok?"online":"fail"}catch(e){return "fail"}}
+  try{const r=JSON.parse(ls.get("lb3","{}"));r[pid]=v;ls.set("lb3",JSON.stringify(r))}catch(e){}
+  return "local";
+}
+const lbHtml=()=>rows.length?'<ol class="lb">'+rows.map((r,i)=>`<li class="${r.id===pid?"me":""}"><span>${["🥇","🥈","🥉"][i]||i+1+"."} ${esc(r.nick||"Player")}${TEACHER&&r.t?` <small>${esc(new Date(r.t).toLocaleString())}</small>`:""}</span><b>${r.best|0} pts</b></li>`).join("")+"</ol>":'<p class="mut c">No scores yet. Be the first!</p>';
+async function refresh(){rows=(await lbGet()).sort((a,b)=>b.best-a.best).slice(0,TEACHER?300:10);const e=$("#lbx");if(e)e.innerHTML=lbHtml()}
+const lbCard=()=>`<div class="card"><h2>🏆 Leaderboard${TEACHER?" · Teacher view":""}</h2><div id="lbx">${lbHtml()}</div><p class="mut sm c">${DB_URL?"Live online ranking":"Local ranking (this device only)"}</p>${TEACHER?'<div class="row"><button class="alt" id="csv">⬇ Download CSV</button></div>':""}</div>`;
+function dlCsv(){
+  const q=v=>{let s=String(v??"");if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+  const t=["name,score,medal,date",...rows.map(r=>[q(r.nick),r.best|0,q(r.medal),q(r.t?new Date(r.t).toISOString():"")].join(","))].join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:"text/csv"}));a.download="mansion-escape-scores.csv";a.click();
+}
+const tools=(h=true)=>`<div class="row">${h?'<button class="alt" id="hp">❓ How to play</button>':""}<button class="alt" id="mute">${S.mute?"🔇 Sound off":"🔊 Sound on"}</button><button class="alt" id="es">🇪🇸 Spanish help: ${S.es?"ON":"OFF"}</button></div>`;
+const helpHtml=()=>`<div class="ov" style="z-index:70"><div class="card help"><h1>❓ How to play</h1>
+<h2>🎯 Goal</h2><p>Escape the mansion! Open 21 locks in 3 rooms with the correct <b>past form</b> of irregular verbs, then defeat Lord Irregular in the Tower. There are 35 verbs in total.</p>
+<h2>👆 How to use the game</h2><ul>
+<li><b>Tap (or click) an object</b> to open its lock. A window appears with a question.</li>
+<li>🍳 <b>Kitchen:</b> tap the correct answer, or press 1, 2 or 3.</li>
+<li>📚 <b>Library:</b> tap the letters in order to spell the word. ⌫ Undo removes the last letter.</li>
+<li>🕯️ <b>Basement:</b> it is dark! Move your mouse or drag your finger to move the flashlight 🔦. Tap a lit object, press 🎧 to listen, <b>type</b> the word and press Enter.</li>
+<li>🌙 <b>Tower:</b> beat the clock ⏱️. Tap an answer or type it and press Enter. Each correct answer hurts the boss. A wrong or late answer costs you a ❤️. You have 4.</li>
+<li>🔊 Tap the speaker to hear a verb. 🇪🇸 turns on Spanish help.</li></ul>
+<h2>⭐ Points</h2><ul>
+<li>First try = full points. Second try = half points.</li>
+<li>💡 A hint costs 2 points. Hints make you think, they do not give the answer!</li>
+<li>🔥 3 correct answers in a row gives a bonus. A mistake breaks your combo.</li>
+<li>⚡ Answer fast in the Tower for extra points.</li></ul>
+<h2>📜 House rules</h2><ul>
+<li>No peeking! The 📖 Verb Book is closed during the game. It only shows verbs you have already unlocked.</li>
+<li>Verbs you miss come back in the boss fight.</li>
+<li>Do not look the verbs up. Try to remember them. It is more fun, and you learn more!</li>
+<li>When you escape, your score is saved. Tap 💾 to download your score card.</li></ul>
+<div class="row"><button id="hclose">Got it! 🔦</button></div></div></div>`;
+
+// ===== RENDER =====
+function render(){
+  const hadOv=!!document.querySelector(".ov");
+  if(S.screen!=="boss")clearInterval(T);
+  document.body.dataset.room=S.screen==="room"?S.room:S.screen==="boss"?"boss":"home";
+  ({home:rHome,room:rRoom,boss:rBoss,end:rEnd,book:rBook})[S.screen]();
+  const m=$("#mute"),e=$("#es"),hp=$("#hp"),cv=$("#csv");
+  if(m)m.onclick=()=>{S.mute=!S.mute;render()};
+  if(e)e.onclick=()=>{S.es=!S.es;render()};
+  if(hp)hp.onclick=()=>{S.help=true;render()};
+  if(cv)cv.onclick=dlCsv;
+  if(S.help){$("#app").insertAdjacentHTML("beforeend",helpHtml());$("#hclose").onclick=()=>{S.help=false;ls.set("seenHelp","1");render()}}
+  // do not replay the pop-in animation when the same window is just refreshed (it looked like a flash)
+  if(hadOv)document.querySelectorAll(".ov .card").forEach(c=>c.style.animation="none");
+  const t=$("#ti");if(t)t.focus();
+}
+function openBook(){if(S.screen==="room"||S.screen==="boss")return;S.back=S.screen;S.screen="book";render()}
+
+function rHome(){
+  const bd=Object.keys(BADGES).map(k=>`<span title="${BADGES[k][1]}" style="font-size:1.8rem;${ach[k]?"":"filter:grayscale(1);opacity:.3"}">${BADGES[k][0]}</span>`).join(" ");
+  $("#app").innerHTML=`<div class="card"><p class="big">🏚️</p><h1>Mansion Escape</h1>
+  <p class="c mut">You are trapped in a haunted mansion! Master the <b>past form</b> of 35 irregular verbs, cross 3 rooms and defeat <b>Lord Irregular</b>.</p>
+  <div class="chips"><span class="chip">🍳 Pick</span><span class="chip">📚 Unscramble</span><span class="chip">🕯️ Flashlight + Listen</span><span class="chip">🌙 Boss fight</span></div>
+  <input id="nick" maxlength="20" placeholder="Type your name (your teacher will see it)" value="${esc(S.nick)}">
+  <div class="row"><button id="go">Start 🔦</button><button class="alt" id="bk">📖 Verb Book (${seenCount()}/${NV})</button></div>${tools()}
+  <p class="c mut sm" style="margin-top:14px">Your badges · Best score: <b>${S.best}</b></p><div class="c">${bd}</div></div>${lbCard()}`;
+  $("#go").onclick=()=>{const n=$("#nick").value.trim();if(!n){$("#nick").focus();return}S.nick=n;ls.set("nick",n);
+    Object.assign(S,{screen:"room",room:0,done:{},score:0,streak:0,maxStreak:0,first:0,q:null,missed:[],mist:[0,0,0],B:null,sent:null,boo:pick(BOO.start)});if(!ls.get("seenHelp",""))S.help=true;sfx(440);render()};
+  $("#nick").onkeydown=e=>{if(e.key==="Enter")$("#go").click()};
+  $("#bk").onclick=openBook;
+}
+
+function rBook(){
+  $("#app").innerHTML=`<div class="card c"><h1>📖 Verb Book</h1><p class="mut">Verbs you unlock in the game appear here (${seenCount()}/${NV}). Locked verbs stay hidden, so no peeking! 🔒</p><p class="mut sm">Tap an unlocked card to hear it. Earn ★ by answering correctly on the first try (max 3).</p>
+  <div class="book">${Q.map((q,i)=>seen[q[0]]?`<button data-s="${i}">${q[2]} ${q[0]} → <b>${q[1]}</b> 🔊<small>${stars(q[0])}</small>${S.es?`<span class="es">${q[6]}</span>`:""}</button>`:`<button class="lockc" disabled>🔒 ${q[0]} → ???<small>Unlock it in the game</small></button>`).join("")}</div>
+  <div class="row"><button id="back">⬅ Back</button></div>${tools(false)}</div>`;
+  document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>say(Q[b.dataset.s][0]+", "+Q[b.dataset.s][1]));
+  $("#back").onclick=()=>{S.screen=S.back;render()};
+}
+
+function code(){let h=7;const s=S.nick+"|"+S.score+"|"+S.stamp;for(const ch of s)h=(h*31+ch.charCodeAt(0))%1000003;return "MX-"+S.score+"-"+h.toString(36).toUpperCase()}
+function saveCard(){
+  const c=document.createElement("canvas");c.width=900;c.height=520;const x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,900,520);g.addColorStop(0,"#2b1a63");g.addColorStop(1,"#5a1d5e");x.fillStyle=g;x.fillRect(0,0,900,520);
+  x.strokeStyle="#fbbf24";x.lineWidth=6;x.strokeRect(20,20,860,480);x.textAlign="center";
+  x.fillStyle="#f5f0ff";x.font="bold 54px system-ui,sans-serif";x.fillText("👻 Mansion Escape",450,100);
+  x.font="28px system-ui,sans-serif";x.fillStyle="#b9acea";x.fillText("Irregular Past Verbs · Score Card",450,148);
+  let fs=60;x.fillStyle="#f5f0ff";do{x.font="bold "+fs+"px system-ui,sans-serif";fs-=4}while(x.measureText(S.nick).width>800&&fs>20);
+  x.fillText(S.nick,450,250);
+  x.fillStyle="#fbbf24";x.font="bold 96px system-ui,sans-serif";x.fillText(medal(S.score)+" "+S.score+" pts",450,375);
+  x.fillStyle="#b9acea";x.font="24px system-ui,sans-serif";
+  x.fillText(new Date(S.stamp||Date.now()).toLocaleString()+"  ·  Verbs unlocked: "+seenCount()+"/"+NV,450,435);
+  x.fillText("Code: "+code(),450,472);
+  const a=document.createElement("a");a.download="mansion-escape-"+(S.nick.replace(/\W+/g,"-")||"player")+".png";a.href=c.toDataURL("image/png");a.click();
+  toast("Score card downloaded! 💾");
+}
+
+function rEnd(){
+  const bd=Object.keys(BADGES).filter(k=>ach[k]).map(k=>BADGES[k][0]+" "+BADGES[k][1]).join(" · ");
+  const st=S.sent==="online"?['ok',"✅ Your score was saved to the online leaderboard!"]:S.sent==="fail"?['bad',"⚠️ We could not reach the online leaderboard. Download your score card and send it to your teacher."]:S.sent==="local"?['',"💾 Your score is saved on this device. Download your score card and send it to your teacher."]:['',"Saving your score…"];
+  $("#app").innerHTML=`<div class="card c"><p class="big">${medal(S.score)}</p><h1>You escaped, ${esc(S.nick)}!</h1>
+  <p style="font-size:1.7rem;font-weight:800">${S.score} points</p>
+  <p class="mut">${S.first} of ${ROOMQ} room verbs on the first try · Best combo 🔥 x${S.maxStreak}</p>
+  <p>${S.score>=430?"Gold medal! You are a verb master.":S.score>=300?"Silver medal! Play again for the gold.":"Bronze medal! Play again to improve."}</p>
+  ${bd?`<p class="sm mut">Badges: ${bd}</p>`:""}
+  <div class="status ${st[0]}">${st[1]}<br><span class="sm">Code: ${code()}</span></div>
+  <div class="row"><button id="save">💾 Save my score</button><button class="alt" id="share">📤 Share</button></div>
+  <div class="row"><button id="again">Play again</button><button class="alt" id="bk">📖 Verb Book (${seenCount()}/${NV})</button></div></div>
+  <div class="card"><details class="more" open><summary>📚 Keep learning: 45 more irregular verbs</summary>
+  <p class="mut sm">Bonus: the <b>past participle</b> is the third form. You use it with have / has (I have gone) and in the passive. Tap a card to hear it.</p>
+  <div class="book wide">${MORE.map((v,i)=>`<button data-m="${i}"><b>${v[0]}</b> → ${v[1]} → ${v[2]} 🔊${S.es?`<span class="es">${v[3]}</span>`:""}</button>`).join("")}</div></details>${tools(false)}</div>${lbCard()}`;
+  $("#again").onclick=()=>{S.screen="home";render()};
+  $("#bk").onclick=openBook;
+  $("#save").onclick=saveCard;
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{const v=MORE[b.dataset.m];say(v[0]+", "+v[1]+", "+v[2])});
+  $("#share").onclick=async()=>{const t=`👻 I escaped Mansion Escape with ${S.score} points ${medal(S.score)}! Can you beat me?`;try{if(navigator.share)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);toast("Copied! 📋")}}catch(e){}};
+}
+
+// ----- Rooms -----
+function rRoom(){
+  const R=ROOMS[S.room],n=Array.from({length:N},(_,i)=>i).filter(i=>S.done[S.room*N+i]).length,dark=S.room===2;
+  let h=`<div class="card"><div class="hud"><span class="pill">👤 ${esc(S.nick)}</span><span class="pill">⭐ ${S.score}</span><span class="pill">🔥 x${S.streak}</span><span class="pill">🔓 ${total()}/${ROOMQ}</span></div>
+  <div class="bar"><i style="width:${total()/ROOMQ*100}%"></i></div>
+  <div class="map">${ROOMS.map((r,i)=>`<div class="${i<S.room||(i===S.room&&roomDone(i))?"done":i===S.room?"cur":"lock"}">${r.e} ${r.n}</div>`).join("")}</div>
+  <div class="room">${R.e}</div><h2 class="c">${R.n}</h2><p class="mut c">${R.s}</p>
+  <div class="how">${HOW[S.room]}</div>
+  <div class="boo"><span>👻</span><div>${esc(S.boo)}</div></div>
+  <div class="objs ${dark?"dark":""}" id="objs">${Array.from({length:N},(_,i)=>{const k=S.room*N+i;return `<button class="obj ${S.done[k]?"done":""}" data-k="${k}" aria-label="Lock ${i+1}">${Q[k][2]}</button>`}).join("")}${dark?'<div class="dk"></div>':""}</div>
+  <p class="c mut">${n}/${N} locks open ${n<N?"· tap an object with 👆":""}</p>`;
+  if(roomDone(S.room))h+=`<div class="c"><button id="next">${S.room<2?"🚪 Open the door to the next room":"🌙 Climb to the Tower!"}</button></div>`;
+  h+=`${tools()}</div>`;
+  if(S.q!==null)h+=ovHtml();
+  $("#app").innerHTML=h;
+
+  const ob=$("#objs");
+  if(dark){const mv=e=>{const r=ob.getBoundingClientRect();ob.style.setProperty("--x",(e.clientX-r.left+14)+"px");ob.style.setProperty("--y",(e.clientY-r.top+14)+"px")};ob.addEventListener("pointermove",mv);ob.addEventListener("pointerdown",mv)}
+  document.querySelectorAll(".obj").forEach(b=>b.onclick=()=>openQ(+b.dataset.k));
+  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(b.dataset.o));
+  document.querySelectorAll(".lt").forEach(b=>b.onclick=()=>{S.built.push(+b.dataset.l);const w=S.built.map(i=>S.letters[i]).join("");if(S.built.length===Q[S.q][1].length)answer(w);else{sfx(500+S.built.length*60,.08);render()}});
+  const set=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  set("#spk",()=>say(Q[S.q][0]+". "+Q[S.q][3].replace("___","blank")));
+  set("#hint",()=>{S.hint=true;render()});
+  set("#close",()=>{S.q=null;render()});
+  set("#undo",()=>{S.built.pop();render()});
+  set("#clr",()=>{S.built=[];render()});
+  set("#sub",()=>answer($("#ti").value));
+  const ti=$("#ti");if(ti)ti.onkeydown=e=>{if(e.key==="Enter")answer(ti.value)};
+  set("#next",()=>{confetti();win();S.boo=pick(BOO.room);if(S.room<2){S.room++}else{startBoss();return}S.q=null;render()});
+}
+function scr(w){let l,n=0;do{l=shuffle(w.split(""))}while(l.join("")===w&&w.length>2&&++n<12);return l}
+function openQ(k){S.q=k;S.tries=0;S.hint=false;S.wrong=[];S.fb="";S.built=[];S.letters=scr(Q[k][1]);S.opts=shuffle([Q[k][1],Q[k][4],Q[k][5]]);sfx(330,.1);render()}
+function ovHtml(){
+  const q=Q[S.q],ok=S.done[S.q],mode=Math.floor(S.q/N);
+  let body="";
+  if(mode===0){
+    body=`<div class="opts">${S.opts.map(o=>`<button class="opt ${ok&&o===q[1]?"good":""} ${S.wrong.includes(o)?"bad":""}" data-o="${o}" ${ok||S.wrong.includes(o)?"disabled":""}>${o}</button>`).join("")}</div>`;
+  }else if(mode===1){
+    body=`<div class="slots ${ok?"good":""}">${q[1].split("").map((_,i)=>`<span class="slot">${S.built[i]!=null?S.letters[S.built[i]]:""}</span>`).join("")}</div>
+    ${ok?"":`<div class="lts">${S.letters.map((c,i)=>`<button class="lt" data-l="${i}" ${S.built.includes(i)?"disabled":""}>${c}</button>`).join("")}</div><div class="row"><button class="alt" id="undo">⌫ Undo</button><button class="alt" id="clr">Clear</button></div>`}`;
+  }else{
+    body=ok?"":`<input id="ti" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="type the past form of “${q[0]}”"><div class="row"><button class="alt" id="spk2" onclick="say(Q[S.q][0]+'. '+Q[S.q][3].replace('___','blank'))">🎧 Listen again</button><button id="sub">Unlock 🔓</button></div>`;
+  }
+  return `<div class="ov"><div class="card"><div class="c"><span class="badge">${MODES[mode]}</span><p class="how" style="font-size:.9rem">${MODEHOW[mode]}</p></div><p class="big" style="font-size:3.5rem">${q[2]}</p>
+  <p class="sent">${esc(q[3]).replace("___",ok?`<u>${q[1]}</u>`:"_____")}</p>
+  <p class="c mut">Base verb: <b>${q[0]}</b> <button class="alt" id="spk" style="padding:3px 12px">🔊</button></p>
+  ${S.es?`<p class="c mut sm">🇪🇸 ${q[6]}</p>`:""}${body}
+  ${S.hint&&!ok?`<div class="msg h">💡 ${q[7]}</div>`:""}${S.fb?`<div class="msg ${ok?"g":"b"}">${S.fb}</div>`:""}${ok?`<div class="msg g">${q[0]} → <b>${q[1]}</b> ${stars(q[0])}</div>`:""}
+  <div class="row">${ok?'<button id="close">Continue ➜</button>':'<button class="alt" id="hint">💡 Hint (-2 pts)</button><button class="alt" id="close">Back</button>'}</div></div></div>`;
+}
+function answer(val){
+  const q=Q[S.q],mode=Math.floor(S.q/N);
+  if(norm(val)===q[1]){
+    const first=S.tries===0;
+    let pts=BASEPTS[mode];if(!first)pts=Math.ceil(pts/2);if(S.hint)pts-=2;pts=Math.max(1,pts);
+    S.streak=first?S.streak+1:0;S.maxStreak=Math.max(S.maxStreak,S.streak);
+    if(first){S.first++;mast[q[0]]=Math.min(3,(mast[q[0]]||0)+1);ls.set("mast",JSON.stringify(mast))}
+    const bonus=first&&S.streak>=3;if(bonus)pts+=2;
+    S.done[S.q]=true;S.score+=pts;saveSeen(q[0]);
+    S.fb=`🎉 Correct! +${pts} points${bonus?" (streak bonus 🔥)":""}`;S.boo=pick(BOO.ok);
+    win();say(q[3].replace("___",q[1]));
+    unlock("first");if(S.streak>=5)unlock("combo");
+    if(roomDone(S.room)){setTimeout(confetti,300);if(S.mist[S.room]===0)unlock("perfect");S.boo="All 7 locks open! Open the door!"}
+  }else{
+    S.tries++;S.streak=0;S.wrong.push(val);S.hint=true;S.mist[S.room]++;
+    if(!S.missed.includes(S.q))S.missed.push(S.q);
+    S.fb="❌ Almost! Read the hint and try again.";S.boo=pick(BOO.bad);oops();
+    if(mode===1)S.built=[];
+  }
+  render();
+}
+
+// ----- Boss -----
+function startBoss(){
+  const tower=Array.from({length:NV-ROOMQ},(_,i)=>ROOMQ+i);
+  const missedRoom=shuffle(S.missed.filter(i=>i<ROOMQ)).slice(0,3);
+  const qu=shuffle([...tower,...missedRoom]);
+  S.B={queue:qu,hp:qu.length,max:qu.length,lives:LIVES,n:0,cur:0,mode:0,opts:[],limit:12000,t0:0,fb:"",locked:false,hit:false,over:null};
+  S.screen="boss";S.q=null;S.streak=0;nextBossQ();
+}
+function nextBossQ(){
+  const B=S.B;
+  if(!B.queue.length)B.queue=shuffle([...Array(NV).keys()]).slice(0,3);
+  B.cur=B.queue.shift();B.mode=B.n++%2;B.opts=shuffle([Q[B.cur][1],Q[B.cur][4],Q[B.cur][5]]);
+  B.limit=B.mode?16000:12000;B.t0=Date.now();B.fb="";B.locked=false;B.hit=false;
+  render();clearInterval(T);
+  T=setInterval(()=>{const left=1-(Date.now()-B.t0)/B.limit,el=$("#tb");if(el)el.style.width=Math.max(0,left*100)+"%";if(left<=0){clearInterval(T);bossAnswer(null)}},100);
+}
+function rBoss(){
+  const B=S.B,q=Q[B.cur];
+  let h=`<div class="card c"><div class="hud"><span class="pill">${"❤️".repeat(B.lives)}${"🖤".repeat(LIVES-B.lives)}</span><span class="pill">⭐ ${S.score}</span><span class="pill">🔥 x${S.streak}</span></div>
+  <div class="boss ${B.hit?"hit":""}">👹</div><h2>Lord Irregular</h2>
+  <div class="bar hp"><i style="width:${B.hp/B.max*100}%"></i></div>
+  <div class="bar tm"><i id="tb"></i></div>
+  <p class="sent">${esc(q[3]).replace("___",B.locked?`<u>${q[1]}</u>`:"_____")}</p>
+  <p class="mut">Base verb: <b>${q[0]}</b> ${S.es?`· 🇪🇸 ${q[6]}`:""}</p>
+  <div class="how" style="font-size:.9rem">${B.mode===0?"👆 Tap the correct answer (or press 1, 2, 3).":"⌨️ Type the past form and press Enter or tap Attack."} Beat the timer ⏱️ or lose a ❤️!</div>`;
+  if(!B.locked){
+    h+=B.mode===0?`<div class="opts">${B.opts.map(o=>`<button class="bopt" data-o="${o}">${o}</button>`).join("")}</div>`
+      :`<input id="ti" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="type the past form of “${q[0]}”"><div class="row"><button id="bsub">Attack ⚔️</button></div>`;
+  }
+  if(B.fb)h+=`<div class="msg ${B.hit?"g":"b"}">${B.fb}</div>`;
+  h+=`${tools(false)}</div>`;
+  if(B.over==="win")h+=`<div class="ov"><div class="card c"><p class="big">💥</p><h1>Lord Irregular vanishes!</h1><p class="mut">The front door swings open...</p></div></div>`;
+  if(B.over==="lose")h+=`<div class="ov"><div class="card c"><p class="big">😵</p><h2>The ghost caught you!</h2><p class="mut">Don't worry. He will ask the verbs again.</p><div class="row"><button id="retry">Try again 🔦</button></div></div></div>`;
+  $("#app").innerHTML=h;
+  document.querySelectorAll(".bopt").forEach(b=>b.onclick=()=>bossAnswer(b.dataset.o));
+  const ti=$("#ti"),bs=$("#bsub");if(ti)ti.onkeydown=e=>{if(e.key==="Enter")bossAnswer(ti.value)};if(bs)bs.onclick=()=>bossAnswer(ti.value);
+  const rt=$("#retry");if(rt)rt.onclick=startBoss;
+  const tb=$("#tb");if(tb&&!B.locked)tb.style.width=Math.max(0,(1-(Date.now()-B.t0)/B.limit)*100)+"%";
+}
+function bossAnswer(v){
+  const B=S.B;if(!B||B.locked||B.over)return;
+  const q=Q[B.cur],el=Date.now()-B.t0;clearInterval(T);B.locked=true;
+  if(v!==null&&norm(v)===q[1]){
+    let pts=10+(el<3000?5:el<6000?2:0);S.streak++;S.maxStreak=Math.max(S.maxStreak,S.streak);if(S.streak>=3)pts+=2;
+    S.score+=pts;B.hp--;B.hit=true;saveSeen(q[0]);
+    B.fb=`💥 Direct hit! +${pts}${el<3000?" ⚡ Lightning!":""}`;sfx(90,.25,"square",.2);win();say(q[3].replace("___",q[1]));
+    if(el<3000)unlock("speed");if(S.streak>=5)unlock("combo");
+    if(B.hp<=0){B.over="win";render();confetti();setTimeout(finish,2000);return}
+    render();setTimeout(nextBossQ,1100);
+  }else{
+    S.streak=0;B.lives--;B.fb=v===null?`⏰ Too slow! It was “${q[1]}”`:`❌ Ouch! It was “${q[1]}”`;
+    if(!S.missed.includes(B.cur))S.missed.push(B.cur);B.queue.push(B.cur);oops();
+    if(B.lives<=0){B.over="lose";render();return}
+    render();setTimeout(nextBossQ,1800);
+  }
+}
+function finish(){
+  if(S.B.lives===LIVES)unlock("flawless");unlock("escape");
+  S.stamp=Date.now();S.sent=null;
+  if(S.score>S.best){S.best=S.score;ls.set("best3",S.best)}
+  S.screen="end";win();render();
+  lbPut().then(r=>{S.sent=r;refresh().then(()=>{if(S.screen==="end")render()})});
+}
+
+// ===== EVENTS & ATMOSPHERE =====
+document.addEventListener("keydown",e=>{
+  if(S.help){if(e.key==="Escape"){S.help=false;ls.set("seenHelp","1");render()}return}
+  if(e.target.tagName==="INPUT")return;
+  if(e.key==="Escape"&&S.screen==="room"&&S.q!==null&&!S.done[S.q]){S.q=null;render();return}
+  if("123".includes(e.key)&&e.key){
+    const i=+e.key-1;
+    if(S.screen==="room"&&S.q!==null&&!S.done[S.q]&&Math.floor(S.q/N)===0&&S.opts[i])answer(S.opts[i]);
+    else if(S.screen==="boss"&&S.B&&!S.B.locked&&!S.B.over&&S.B.mode===0&&S.B.opts[i])bossAnswer(S.B.opts[i]);
+  }
+});
+for(let i=0;i<10;i++){const s=document.createElement("span");s.textContent=["👻","🦇","🕸️","🕯️"][i%4];s.style.cssText=`left:${i*10+Math.random()*8}%;font-size:${30+Math.random()*40}px;animation-duration:${14+Math.random()*16}s;animation-delay:-${Math.random()*20}s`;$("#bg").appendChild(s)}
+// soft, silent lightning glow (never during the timed boss fight)
+(function storm(){setTimeout(()=>{if(S.screen!=="boss"){const f=$("#fl");f.classList.remove("on");void f.offsetWidth;f.classList.add("on")}storm()},15000+Math.random()*20000)})();
+render();refresh();setInterval(refresh,6000);
+</script>
+</body>
+</html>
